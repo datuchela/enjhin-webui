@@ -1,78 +1,775 @@
-import { Mode } from "./types";
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./constants";
-import { handleDeleteBodyClick, handleExportClick, handleModeClick, handleMouseDown, handleMouseMove, handleMouseUp, handleNewBodyClick } from "./handlers";
-import { redrawAll } from "./utils";
-import { Editor } from "./state";
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
 
-var state: Editor;
+/***/ "./src/canvas.ts":
+/*!***********************!*\
+  !*** ./src/canvas.ts ***!
+  \***********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-(() => {
-  const canvas = document.getElementById("enjhin-editor") as HTMLCanvasElement | null;
-  const bodyList = document.getElementById("list-view") as HTMLMenuElement | null;
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Canvas: () => (/* binding */ Canvas),
+/* harmony export */   clearBackground: () => (/* binding */ clearBackground),
+/* harmony export */   drawCircle: () => (/* binding */ drawCircle),
+/* harmony export */   drawCircleStroke: () => (/* binding */ drawCircleStroke),
+/* harmony export */   drawLine: () => (/* binding */ drawLine)
+/* harmony export */ });
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./constants */ "./src/constants.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./types */ "./src/types.ts");
+/* harmony import */ var _math__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./math */ "./src/math.ts");
 
-  // Buttons
-  const selectModeBtn = document.getElementById("mode-select") as HTMLButtonElement | null;
-  const insertModeBtn = document.getElementById("mode-insert") as HTMLButtonElement | null;
-  const moveModeBtn = document.getElementById("mode-move") as HTMLButtonElement | null;
-  const connectModeBtn = document.getElementById("mode-connect") as HTMLButtonElement | null;
-  const deleteModeBtn = document.getElementById("mode-delete") as HTMLButtonElement | null;
 
-  const exportBtn = document.getElementById("export") as HTMLButtonElement | null;
-  const newBodyBtn = document.getElementById("new-body") as HTMLButtonElement | null;
-  const deleteBodyBtn = document.getElementById("delete-body") as HTMLButtonElement | null;
 
-  if (!canvas) throw new Error("Couldn't get canvas");
-  if (!bodyList) throw new Error("Couldn't get bodyList");
-  if (!selectModeBtn) throw new Error("Couldn't get selectModeBtn");
-  if (!insertModeBtn) throw new Error("Couldn't get insertModeBtn");
-  if (!moveModeBtn) throw new Error("Couldn't get moveModeBtn");
-  if (!connectModeBtn) throw new Error("Couldn't get connectModeBtn");
-  if (!deleteModeBtn) throw new Error("Couldn't get deleteModeBtn");
-  if (!exportBtn) throw new Error("Couldn't get exportBtn");
-  if (!newBodyBtn) throw new Error("Couldn't get newBodyBtn");
-  if (!deleteBodyBtn) throw new Error("Couldn't get deleteBodyBtn");
-
-  canvas.width = CANVAS_WIDTH;
-  canvas.height = CANVAS_HEIGHT;
-
-  state = new Editor(canvas, {
-    elements: {
-      exportButton: exportBtn,
-      newBodyButton: newBodyBtn,
-      bodyList: bodyList,
-      modeButtons: [
-        { mode: Mode.SELECT, element: selectModeBtn },
-        { mode: Mode.INSERT, element: insertModeBtn },
-        { mode: Mode.MOVE, element: moveModeBtn },
-        { mode: Mode.CONNECT, element: connectModeBtn },
-        { mode: Mode.DELETE, element: deleteModeBtn },
-      ],
+class Canvas {
+    element;
+    ctx;
+    _mouseCoords = new _math__WEBPACK_IMPORTED_MODULE_2__.Vector2(16, _constants__WEBPACK_IMPORTED_MODULE_0__.CANVAS_HEIGHT - 20);
+    _mouseCoordsColor = "white";
+    constructor(element) {
+        this.element = element;
+        const ctx = element.getContext("2d");
+        if (ctx === null)
+            throw new Error("Unable to get 2d context from canvas");
+        this.ctx = ctx;
     }
-  }
-  );
+    redraw = (state, _timeStamp) => {
+        this.clearBackground(_constants__WEBPACK_IMPORTED_MODULE_0__.CANVAS_BACKGROUND);
+        this.drawSprings(state.data.springs);
+        if (state.mode === _types__WEBPACK_IMPORTED_MODULE_1__.Mode.CONNECT && state.mouse.isMouseDown && state.mouse.savedParticle) {
+            drawLine(state.ctx, state.mouse.savedParticle.position, state.mouse.position, "white", 1);
+        }
+        this.drawParticles(state.data.particles, state.mouse.closestParticle);
+        this.drawCoordinates(state.mouse.position, this._mouseCoords, this._mouseCoordsColor);
+    };
+    clearBackground = (color) => {
+        clearBackground(this.ctx, color);
+    };
+    drawParticles = (particles, closestParticle) => {
+        particles.forEach((particle) => {
+            if (closestParticle && (closestParticle.id === particle.id)) {
+                drawCircleStroke(this.ctx, particle.position, _constants__WEBPACK_IMPORTED_MODULE_0__.PARTICLE_GRAB_RADIUS, "white");
+            }
+            drawCircle(this.ctx, particle.position, _constants__WEBPACK_IMPORTED_MODULE_0__.PARTICLE_RADIUS, _constants__WEBPACK_IMPORTED_MODULE_0__.PARTICLE_COLOR);
+        });
+    };
+    drawSprings = (springs) => {
+        springs.forEach((spring) => {
+            drawLine(this.ctx, spring.particles[0].position, spring.particles[1].position, _constants__WEBPACK_IMPORTED_MODULE_0__.SPRING_COLOR, 2);
+        });
+    };
+    drawCoordinates(mousePosition, drawPosition, color) {
+        this.ctx.save();
+        this.ctx.fillStyle = color;
+        this.ctx.fillText(`x: ${mousePosition.x}  y: ${mousePosition.y}`, drawPosition.x, drawPosition.y);
+        this.ctx.restore();
+    }
+}
+function drawCircle(ctx, center, radius, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.strokeStyle = "blue";
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+}
+function drawCircleStroke(ctx, center, radius, color) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.restore();
+}
+function drawLine(ctx, start, end, color, lineWidth) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth ?? 1;
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, end.y);
+    ctx.stroke();
+    ctx.restore();
+}
+function clearBackground(ctx, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.restore();
+}
 
-  exportBtn.addEventListener("click", (e) => handleExportClick(e, state));
-  newBodyBtn.addEventListener("click", () => handleNewBodyClick(state));
-  deleteBodyBtn.addEventListener("click", () => handleDeleteBodyClick(state));
 
-  state.canvasElement.addEventListener("mousedown", (e) => handleMouseDown(e, state));
-  state.canvasElement.addEventListener("mousemove", (e) => handleMouseMove(e, state));
-  state.canvasElement.addEventListener("mouseup", (e) => handleMouseUp(e, state));
-  state.elements.modeButtons.forEach((btn) => {
-    btn.element.addEventListener("click", () => handleModeClick(btn.mode, state));
-  });
+/***/ }),
 
-  redrawAll(state);
+/***/ "./src/constants.ts":
+/*!**************************!*\
+  !*** ./src/constants.ts ***!
+  \**************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-  function frame(_timeStamp: number) {
-    state.canvas.redraw(state);
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CANVAS_BACKGROUND: () => (/* binding */ CANVAS_BACKGROUND),
+/* harmony export */   CANVAS_HEIGHT: () => (/* binding */ CANVAS_HEIGHT),
+/* harmony export */   CANVAS_WIDTH: () => (/* binding */ CANVAS_WIDTH),
+/* harmony export */   PARTICLE_COLOR: () => (/* binding */ PARTICLE_COLOR),
+/* harmony export */   PARTICLE_COLOR_FOCUS: () => (/* binding */ PARTICLE_COLOR_FOCUS),
+/* harmony export */   PARTICLE_GRAB_RADIUS: () => (/* binding */ PARTICLE_GRAB_RADIUS),
+/* harmony export */   PARTICLE_RADIUS: () => (/* binding */ PARTICLE_RADIUS),
+/* harmony export */   SPRING_COLOR: () => (/* binding */ SPRING_COLOR)
+/* harmony export */ });
+const CANVAS_WIDTH = 1366;
+const CANVAS_HEIGHT = 800;
+const CANVAS_BACKGROUND = "black";
+const PARTICLE_RADIUS = 5;
+const PARTICLE_GRAB_RADIUS = PARTICLE_RADIUS + 3;
+const PARTICLE_COLOR = "#FCE93D";
+const PARTICLE_COLOR_FOCUS = "#D9CB40";
+const SPRING_COLOR = "#FFFFFF";
+
+
+/***/ }),
+
+/***/ "./src/dom.ts":
+/*!********************!*\
+  !*** ./src/dom.ts ***!
+  \********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   refreshButtons: () => (/* binding */ refreshButtons),
+/* harmony export */   refreshListView: () => (/* binding */ refreshListView)
+/* harmony export */ });
+function refreshListView(state) {
+    const { elements: { bodyList }, data: { bodies } } = state;
+    bodyList.innerHTML = "";
+    bodies.forEach((body) => {
+        const listItem = document.createElement("li");
+        const itemRadio = document.createElement("input");
+        const itemLabel = document.createElement("label");
+        listItem.classList.add("flex", "gap-2", "p-3");
+        itemRadio.type = "radio";
+        itemRadio.id = body.id;
+        itemRadio.name = "body";
+        itemRadio.value = body.id;
+        itemRadio.onchange = (e) => {
+            state.setCurrentBodyId(e.target.value);
+            console.log(state.currentBodyId);
+        };
+        itemRadio.checked = state.currentBodyId === body.id;
+        itemLabel.htmlFor = body.id;
+        itemLabel.innerText = `Body ${body.id}`;
+        listItem.appendChild(itemRadio);
+        listItem.appendChild(itemLabel);
+        bodyList.appendChild(listItem);
+    });
+}
+function refreshButtons(state) {
+    state.elements.modeButtons.forEach((btn) => {
+        btn.element.disabled = false;
+        if (btn.mode !== state.mode)
+            return;
+        btn.element.disabled = true;
+    });
+}
+
+
+/***/ }),
+
+/***/ "./src/handlers.ts":
+/*!*************************!*\
+  !*** ./src/handlers.ts ***!
+  \*************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getClosestParticle: () => (/* binding */ getClosestParticle),
+/* harmony export */   handleDeleteBodyClick: () => (/* binding */ handleDeleteBodyClick),
+/* harmony export */   handleExportClick: () => (/* binding */ handleExportClick),
+/* harmony export */   handleModeClick: () => (/* binding */ handleModeClick),
+/* harmony export */   handleMouseDown: () => (/* binding */ handleMouseDown),
+/* harmony export */   handleMouseMove: () => (/* binding */ handleMouseMove),
+/* harmony export */   handleMouseUp: () => (/* binding */ handleMouseUp),
+/* harmony export */   handleNewBodyClick: () => (/* binding */ handleNewBodyClick)
+/* harmony export */ });
+/* harmony import */ var _dom__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./dom */ "./src/dom.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./types */ "./src/types.ts");
+/* harmony import */ var _math__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./math */ "./src/math.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./physics */ "./src/physics.ts");
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./constants */ "./src/constants.ts");
+
+
+
+
+
+function handleMouseDown(_, state) {
+    state.mouse.isMouseDown = true;
+    state.updateClosestParticle();
+    switch (state.mode) {
+        case _types__WEBPACK_IMPORTED_MODULE_1__.Mode.SELECT:
+            break;
+        case _types__WEBPACK_IMPORTED_MODULE_1__.Mode.INSERT:
+            if (state.currentBodyId === null)
+                break;
+            const newParticle = new _physics__WEBPACK_IMPORTED_MODULE_3__.Particle(state.mouse.position.clone());
+            state.addParticle(newParticle, state.currentBodyId);
+            break;
+        case _types__WEBPACK_IMPORTED_MODULE_1__.Mode.MOVE:
+            break;
+        case _types__WEBPACK_IMPORTED_MODULE_1__.Mode.CONNECT:
+            const { particle, distance } = getClosestParticle(state.mouse.position, state.data.particles);
+            if (!particle || distance > _constants__WEBPACK_IMPORTED_MODULE_4__.PARTICLE_GRAB_RADIUS)
+                break;
+            state.mouse.savedParticle = particle;
+            break;
+        case _types__WEBPACK_IMPORTED_MODULE_1__.Mode.DELETE:
+            if (!state.mouse.closestParticle)
+                break;
+            state.removeParticleById(state.mouse.closestParticle.id);
+            break;
+    }
+}
+function handleMouseMove(e, state) {
+    const rect = state.canvasElement.getBoundingClientRect();
+    state.mouse.position.x = e.clientX - rect.left;
+    state.mouse.position.y = e.clientY - rect.top;
+    state.updateClosestParticle();
+    switch (state.mode) {
+        case _types__WEBPACK_IMPORTED_MODULE_1__.Mode.SELECT:
+            break;
+        case _types__WEBPACK_IMPORTED_MODULE_1__.Mode.INSERT:
+            break;
+        case _types__WEBPACK_IMPORTED_MODULE_1__.Mode.MOVE:
+            if (!state.mouse.isMouseDown || !state.mouse.closestParticle)
+                break;
+            move(state.mouse.position, state.mouse.closestParticle);
+            break;
+        case _types__WEBPACK_IMPORTED_MODULE_1__.Mode.CONNECT:
+            break;
+    }
+}
+function handleMouseUp(_, state) {
+    state.mouse.isMouseDown = false;
+    switch (state.mode) {
+        case _types__WEBPACK_IMPORTED_MODULE_1__.Mode.CONNECT:
+            const { particle, distance } = getClosestParticle(state.mouse.position, state.data.particles);
+            if ((!state.currentBodyId || !particle || distance > _constants__WEBPACK_IMPORTED_MODULE_4__.PARTICLE_GRAB_RADIUS || !state.mouse.savedParticle)
+                || state.mouse.savedParticle.id === particle.id)
+                break;
+            const spring = state.connectParticles([state.mouse.savedParticle, particle]);
+            state.addSpring(spring, state.currentBodyId);
+            break;
+        default:
+            state.mouse.closestParticle = null;
+            state.mouse.savedParticle = null;
+            break;
+    }
+}
+function handleNewBodyClick(state) {
+    const newBody = new _physics__WEBPACK_IMPORTED_MODULE_3__.SoftBody();
+    state.addBody(newBody);
+    state.setCurrentBodyId(newBody.id);
+    (0,_dom__WEBPACK_IMPORTED_MODULE_0__.refreshListView)(state);
+}
+function handleDeleteBodyClick(state) {
+    if (!state.currentBodyId)
+        return;
+    state.removeBodyById(state.currentBodyId);
+    if (state.data.bodies.length > 0) {
+        state.setCurrentBodyId(state.data.bodies[state.data.bodies.length - 1].id);
+    }
+    else {
+        state.setCurrentBodyId(null);
+    }
+    (0,_dom__WEBPACK_IMPORTED_MODULE_0__.refreshListView)(state);
+}
+function handleModeClick(mode, state) {
+    state.setMode(mode);
+    (0,_dom__WEBPACK_IMPORTED_MODULE_0__.refreshButtons)(state);
+}
+function handleExportClick(_, state) {
+    const exportData = {
+        particles: state.data.particles.map(p => {
+            const { bodyIds, springIds, ...rest } = p;
+            return rest;
+        }),
+        springs: state.data.springs.map(s => {
+            const { bodyIds, ...rest } = s;
+            return rest;
+        }),
+    };
+    console.log(JSON.stringify(exportData));
+}
+function getClosestParticle(mousePos, particles) {
+    let closestDistance = Number.MAX_SAFE_INTEGER;
+    let closestParticle = null;
+    particles.forEach((particle) => {
+        const currDistance = _math__WEBPACK_IMPORTED_MODULE_2__.Vector2.subtract(mousePos, particle.position).length;
+        if (currDistance < closestDistance) {
+            closestParticle = particle;
+            closestDistance = currDistance;
+        }
+    });
+    return { particle: closestParticle, distance: closestDistance };
+}
+function move(mousePos, particle) {
+    // NOTE: Right now the program doesn't take into account where exactly on the particle 
+    // mouse has been pressed, it just moves the center of the particle towards mouse position.
+    // TODO: Move particles based on where the mouse has been pressed on them.
+    particle.position = mousePos.clone();
+}
+
+
+/***/ }),
+
+/***/ "./src/math.ts":
+/*!*********************!*\
+  !*** ./src/math.ts ***!
+  \*********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Vector2: () => (/* binding */ Vector2)
+/* harmony export */ });
+class Vector2 {
+    vector;
+    constructor(x, y) {
+        this.vector = [x, y];
+    }
+    get x() {
+        return this.vector[0];
+    }
+    get y() {
+        return this.vector[1];
+    }
+    set x(newX) {
+        this.vector[0] = newX;
+    }
+    set y(newY) {
+        this.vector[1] = newY;
+    }
+    get length() {
+        return Math.sqrt(this.x ** 2 + this.y ** 2);
+    }
+    set length(len) {
+        throw new Error(`Tried to set ${len} as vector length, you cannot set vector length explicitly.`);
+    }
+    get unit() {
+        if (this.length === 0)
+            return new Vector2(0, 0);
+        return new Vector2(this.x / this.length, this.y / this.length);
+    }
+    set unit(vector) {
+        throw new Error(`Tried to set ${vector} as a unit vector, you cannot set unit vector explicitly.`);
+    }
+    clone = () => {
+        return new Vector2(this.x, this.y);
+    };
+    static isEqual = (v1, v2) => {
+        return v1.x === v2.x && v1.y === v2.y;
+    };
+    static crossProduct = (v1, v2) => {
+        return v1.x * v2.y - v1.y * v2.x;
+    };
+    static dotProduct = (v1, v2) => {
+        return v1.x * v2.x + v1.y * v2.y;
+    };
+    static add = (vector1, vector2) => {
+        return new Vector2(vector1.x + vector2.x, vector1.y + vector2.y);
+    };
+    static subtract = (vector1, vector2) => {
+        return new Vector2(vector1.x - vector2.x, vector1.y - vector2.y);
+    };
+    static scale = (vector, scalar) => {
+        return new Vector2(vector.x * scalar, vector.y * scalar);
+    };
+    draw = (ctx, startX, startY, options) => {
+        ctx.strokeStyle = options?.color ?? "red";
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX + this.x, startY + this.y);
+        ctx.stroke();
+    };
+}
+
+
+/***/ }),
+
+/***/ "./src/physics.ts":
+/*!************************!*\
+  !*** ./src/physics.ts ***!
+  \************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Particle: () => (/* binding */ Particle),
+/* harmony export */   SoftBody: () => (/* binding */ SoftBody),
+/* harmony export */   Spring: () => (/* binding */ Spring)
+/* harmony export */ });
+const ids = {
+    softBodyId: 0,
+    particleId: 0,
+    springId: 0,
+};
+class SoftBody {
+    id;
+    particles;
+    springs;
+    constructor(particles, springs) {
+        this.id = `${++ids.softBodyId}`;
+        this.particles = particles ?? [];
+        this.springs = springs ?? [];
+    }
+}
+class Particle {
+    id;
+    position;
+    springIds;
+    bodyIds;
+    constructor(position) {
+        this.id = `${++ids.particleId}`;
+        this.position = position;
+        this.springIds = [];
+        this.bodyIds = [];
+    }
+}
+class Spring {
+    id;
+    particles;
+    bodyIds;
+    constructor(particles) {
+        this.id = `${++ids.springId}`;
+        this.particles = particles;
+        this.bodyIds = [];
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/state.ts":
+/*!**********************!*\
+  !*** ./src/state.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Editor: () => (/* binding */ Editor)
+/* harmony export */ });
+/* harmony import */ var _canvas__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./canvas */ "./src/canvas.ts");
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./constants */ "./src/constants.ts");
+/* harmony import */ var _handlers__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./handlers */ "./src/handlers.ts");
+/* harmony import */ var _math__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./math */ "./src/math.ts");
+/* harmony import */ var _physics__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./physics */ "./src/physics.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./types */ "./src/types.ts");
+
+
+
+
+
+
+class Editor {
+    canvas;
+    canvasElement;
+    ctx;
+    elements;
+    data;
+    mode;
+    currentBodyId;
+    mouse;
+    constructor(canvasElement, initialState) {
+        this.canvas = new _canvas__WEBPACK_IMPORTED_MODULE_0__.Canvas(canvasElement);
+        this.canvasElement = this.canvas.element;
+        this.ctx = this.canvas.ctx;
+        this.elements = initialState.elements;
+        this.data = initialState.data ?? {
+            bodies: [],
+            springs: [],
+            particles: [],
+        };
+        this.mouse = {
+            position: new _math__WEBPACK_IMPORTED_MODULE_3__.Vector2(0, 0),
+            isMouseDown: false,
+            closestParticle: null,
+            savedParticle: null,
+        };
+        this.mode = _types__WEBPACK_IMPORTED_MODULE_5__.Mode.INSERT;
+        this.currentBodyId = null;
+    }
+    getBodyById = (id) => {
+        const body = this.data.bodies.find((body) => body.id === id);
+        if (!body)
+            throw new Error(`Couldn't find body with id ${id}`);
+        return body;
+    };
+    getParticleById = (id) => {
+        const particle = this.data.particles.find((particle) => particle.id === id);
+        if (!particle)
+            throw new Error(`Couldn't find particle with id ${id}`);
+        return particle;
+    };
+    getSpringById = (id) => {
+        const spring = this.data.springs.find((spring) => spring.id === id);
+        if (!spring)
+            throw new Error(`Couldn't find spring with id ${id}`);
+        return spring;
+    };
+    addBody = (body) => {
+        this.data.bodies.push(body);
+    };
+    addSpring = (spring, bodyId) => {
+        const body = this.getBodyById(bodyId);
+        spring.bodyIds.push(bodyId);
+        this.data.springs.push(spring);
+        body.springs.push(spring.id);
+    };
+    addParticle = (particle, bodyId) => {
+        const body = this.getBodyById(bodyId);
+        particle.bodyIds.push(bodyId);
+        this.data.particles.push(particle);
+        body.particles.push(particle.id);
+    };
+    connectParticles = (particles) => {
+        const spring = new _physics__WEBPACK_IMPORTED_MODULE_4__.Spring(particles);
+        particles.forEach(p => p.springIds.push(spring.id));
+        return spring;
+    };
+    setCurrentBodyId = (id) => {
+        this.currentBodyId = id;
+    };
+    setMode = (mode) => {
+        this.mode = mode;
+    };
+    updateClosestParticle = () => {
+        const { particle, distance } = (0,_handlers__WEBPACK_IMPORTED_MODULE_2__.getClosestParticle)(this.mouse.position, this.data.particles);
+        if (!particle || distance > _constants__WEBPACK_IMPORTED_MODULE_1__.PARTICLE_GRAB_RADIUS) {
+            this.mouse.closestParticle = null;
+        }
+        else {
+            this.mouse.closestParticle = particle;
+        }
+    };
+    removeParticleById = (id) => {
+        const particle = this.getParticleById(id);
+        particle.bodyIds.forEach(bodyId => {
+            const body = this.getBodyById(bodyId);
+            body.particles = body.particles.filter(pId => pId !== id);
+        });
+        particle.springIds.forEach(springId => this.removeSpringById(springId));
+        this.data.particles = this.data.particles.filter(p => p.id !== id);
+    };
+    removeSpringById = (id) => {
+        const spring = this.getSpringById(id);
+        spring.bodyIds.forEach(bodyId => {
+            const body = this.getBodyById(bodyId);
+            body.springs = body.springs.filter(sId => sId !== id);
+        });
+        spring.particles.forEach(p => p.springIds = p.springIds.filter(sId => sId !== id));
+        this.data.springs = this.data.springs.filter(s => s.id !== id);
+    };
+    removeBodyById = (id) => {
+        const body = this.getBodyById(id);
+        body.particles.forEach(pId => {
+            this.removeParticleById(pId);
+        });
+        body.springs.forEach(sId => {
+            console.log("removingSprings from bodyRemove");
+            this.removeSpringById(sId);
+        });
+        this.data.bodies = this.data.bodies.filter(b => b.id !== id);
+    };
+}
+
+
+/***/ }),
+
+/***/ "./src/types.ts":
+/*!**********************!*\
+  !*** ./src/types.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Mode: () => (/* binding */ Mode)
+/* harmony export */ });
+var Mode;
+(function (Mode) {
+    Mode[Mode["SELECT"] = 0] = "SELECT";
+    Mode[Mode["INSERT"] = 1] = "INSERT";
+    Mode[Mode["MOVE"] = 2] = "MOVE";
+    Mode[Mode["CONNECT"] = 3] = "CONNECT";
+    Mode[Mode["DELETE"] = 4] = "DELETE";
+})(Mode || (Mode = {}));
+;
+
+
+/***/ }),
+
+/***/ "./src/utils.ts":
+/*!**********************!*\
+  !*** ./src/utils.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   redrawAll: () => (/* binding */ redrawAll)
+/* harmony export */ });
+/* harmony import */ var _dom__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./dom */ "./src/dom.ts");
+
+function redrawAll(state) {
+    (0,_dom__WEBPACK_IMPORTED_MODULE_0__.refreshButtons)(state);
+}
+
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+(() => {
+/*!*********************!*\
+  !*** ./src/main.ts ***!
+  \*********************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./types */ "./src/types.ts");
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./constants */ "./src/constants.ts");
+/* harmony import */ var _handlers__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./handlers */ "./src/handlers.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils */ "./src/utils.ts");
+/* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./state */ "./src/state.ts");
+
+
+
+
+
+var state;
+(() => {
+    const canvas = document.getElementById("enjhin-editor");
+    const bodyList = document.getElementById("list-view");
+    // Buttons
+    const selectModeBtn = document.getElementById("mode-select");
+    const insertModeBtn = document.getElementById("mode-insert");
+    const moveModeBtn = document.getElementById("mode-move");
+    const connectModeBtn = document.getElementById("mode-connect");
+    const deleteModeBtn = document.getElementById("mode-delete");
+    const exportBtn = document.getElementById("export");
+    const newBodyBtn = document.getElementById("new-body");
+    const deleteBodyBtn = document.getElementById("delete-body");
+    if (!canvas)
+        throw new Error("Couldn't get canvas");
+    if (!bodyList)
+        throw new Error("Couldn't get bodyList");
+    if (!selectModeBtn)
+        throw new Error("Couldn't get selectModeBtn");
+    if (!insertModeBtn)
+        throw new Error("Couldn't get insertModeBtn");
+    if (!moveModeBtn)
+        throw new Error("Couldn't get moveModeBtn");
+    if (!connectModeBtn)
+        throw new Error("Couldn't get connectModeBtn");
+    if (!deleteModeBtn)
+        throw new Error("Couldn't get deleteModeBtn");
+    if (!exportBtn)
+        throw new Error("Couldn't get exportBtn");
+    if (!newBodyBtn)
+        throw new Error("Couldn't get newBodyBtn");
+    if (!deleteBodyBtn)
+        throw new Error("Couldn't get deleteBodyBtn");
+    canvas.width = _constants__WEBPACK_IMPORTED_MODULE_1__.CANVAS_WIDTH;
+    canvas.height = _constants__WEBPACK_IMPORTED_MODULE_1__.CANVAS_HEIGHT;
+    state = new _state__WEBPACK_IMPORTED_MODULE_4__.Editor(canvas, {
+        elements: {
+            exportButton: exportBtn,
+            newBodyButton: newBodyBtn,
+            bodyList: bodyList,
+            modeButtons: [
+                { mode: _types__WEBPACK_IMPORTED_MODULE_0__.Mode.SELECT, element: selectModeBtn },
+                { mode: _types__WEBPACK_IMPORTED_MODULE_0__.Mode.INSERT, element: insertModeBtn },
+                { mode: _types__WEBPACK_IMPORTED_MODULE_0__.Mode.MOVE, element: moveModeBtn },
+                { mode: _types__WEBPACK_IMPORTED_MODULE_0__.Mode.CONNECT, element: connectModeBtn },
+                { mode: _types__WEBPACK_IMPORTED_MODULE_0__.Mode.DELETE, element: deleteModeBtn },
+            ],
+        }
+    });
+    exportBtn.addEventListener("click", (e) => (0,_handlers__WEBPACK_IMPORTED_MODULE_2__.handleExportClick)(e, state));
+    newBodyBtn.addEventListener("click", () => (0,_handlers__WEBPACK_IMPORTED_MODULE_2__.handleNewBodyClick)(state));
+    deleteBodyBtn.addEventListener("click", () => (0,_handlers__WEBPACK_IMPORTED_MODULE_2__.handleDeleteBodyClick)(state));
+    state.canvasElement.addEventListener("mousedown", (e) => (0,_handlers__WEBPACK_IMPORTED_MODULE_2__.handleMouseDown)(e, state));
+    state.canvasElement.addEventListener("mousemove", (e) => (0,_handlers__WEBPACK_IMPORTED_MODULE_2__.handleMouseMove)(e, state));
+    state.canvasElement.addEventListener("mouseup", (e) => (0,_handlers__WEBPACK_IMPORTED_MODULE_2__.handleMouseUp)(e, state));
+    state.elements.modeButtons.forEach((btn) => {
+        btn.element.addEventListener("click", () => (0,_handlers__WEBPACK_IMPORTED_MODULE_2__.handleModeClick)(btn.mode, state));
+    });
+    (0,_utils__WEBPACK_IMPORTED_MODULE_3__.redrawAll)(state);
+    function frame(_timeStamp) {
+        state.canvas.redraw(state);
+        requestAnimationFrame(frame);
+    }
     requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-
 })();
-
-
 /*
  {
     "bodies": [
@@ -3202,3 +3899,9 @@ var state: Editor;
     ]
 }
  */
+
+})();
+
+/******/ })()
+;
+//# sourceMappingURL=bundle.js.map
