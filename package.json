@@ -5,7 +5,7 @@
   "scripts": {
     "watch": "webpack --watch",
     "tw-watch": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
-    "build": "webpack --mode production && tailwindcss -i ./src/input.css -o ./dist/output.css"
+    "build": "webpack --mode production && tailwindcss -i ./src/input.css -o ./dist/output.css && cp ./CNAME ./dist/"
   },
   "keywords": [],
   "author": "",
