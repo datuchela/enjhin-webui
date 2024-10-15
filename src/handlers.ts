@@ -98,12 +98,17 @@ export function handleModeClick(mode: Mode, state: Editor) {
 export function handleExportClick(_: MouseEvent, state: Editor) {
   const exportData = {
     particles: state.data.particles.map(p => {
-      const { bodyIds, springIds, ...rest } = p;
-      return rest;
+      return {
+        id: p.id,
+        x: p.position.x,
+        y: p.position.y,
+      };
     }),
     springs: state.data.springs.map(s => {
-      const { bodyIds, ...rest } = s;
-      return rest;
+      return {
+        p1: s.particleIds[0],
+        p2: s.particleIds[1],
+      };
     }),
   }
   console.log(JSON.stringify(exportData));

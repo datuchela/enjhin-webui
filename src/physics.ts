@@ -34,10 +34,12 @@ export class Particle {
 export class Spring {
   id: SpringId;
   particles: [Particle, Particle];
+  particleIds: [ParticleId, ParticleId];
   bodyIds: SoftBodyId[];
   constructor(particles: [Particle, Particle]) {
     this.id = `${++ids.springId}`;
     this.particles = particles;
+    this.particleIds = [particles[0].id, particles[1].id];
     this.bodyIds = [];
   }
 }
