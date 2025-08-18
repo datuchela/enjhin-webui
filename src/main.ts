@@ -9,6 +9,7 @@ var state: Editor;
 (() => {
   const canvas = document.getElementById("enjhin-editor") as HTMLCanvasElement | null;
   const bodyList = document.getElementById("list-view") as HTMLMenuElement | null;
+  const exportedCode = document.getElementById("exported-code") as HTMLElement | null;
 
   // Buttons
   const selectModeBtn = document.getElementById("mode-select") as HTMLButtonElement | null;
@@ -31,6 +32,7 @@ var state: Editor;
   if (!exportBtn) throw new Error("Couldn't get exportBtn");
   if (!newBodyBtn) throw new Error("Couldn't get newBodyBtn");
   if (!deleteBodyBtn) throw new Error("Couldn't get deleteBodyBtn");
+  if (!exportedCode) throw new Error("Couldn't get exportedCode");
 
   canvas.width = CANVAS_WIDTH;
   canvas.height = CANVAS_HEIGHT;
@@ -51,7 +53,7 @@ var state: Editor;
   }
   );
 
-  exportBtn.addEventListener("click", (e) => handleExportClick(e, state));
+  exportBtn.addEventListener("click", (e) => handleExportClick(e, state, exportedCode));
   newBodyBtn.addEventListener("click", () => handleNewBodyClick(state));
   deleteBodyBtn.addEventListener("click", () => handleDeleteBodyClick(state));
 

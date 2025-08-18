@@ -95,7 +95,7 @@ export function handleModeClick(mode: Mode, state: Editor) {
   refreshButtons(state);
 }
 
-export function handleExportClick(_: MouseEvent, state: Editor) {
+export function handleExportClick(_: MouseEvent, state: Editor, element: HTMLElement) {
   const exportData = {
     particles: state.data.particles.map(p => {
       return {
@@ -111,7 +111,14 @@ export function handleExportClick(_: MouseEvent, state: Editor) {
       };
     }),
   }
-  console.log(JSON.stringify(exportData));
+  const stringifiedData = JSON.stringify(exportData);
+  console.log(stringifiedData);
+  element.innerHTML = `
+    <div>Exported data:</div>
+    <pre>
+      <code>${stringifiedData}</code>
+    </pre>
+  `
 }
 
 export type ClosestParticle = {
