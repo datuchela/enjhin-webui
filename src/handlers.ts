@@ -113,11 +113,10 @@ export function handleExportClick(_: MouseEvent, state: Editor, element: HTMLEle
   }
   const stringifiedData = JSON.stringify(exportData);
   console.log(stringifiedData);
+  element.classList.remove("hidden");
   element.innerHTML = `
     <div>Exported data:</div>
-    <pre>
-      <code>${stringifiedData}</code>
-    </pre>
+    <code>${stringifiedData}</code>
   `
 }
 
